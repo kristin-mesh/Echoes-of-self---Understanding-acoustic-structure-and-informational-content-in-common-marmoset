@@ -18,10 +18,22 @@ library(ggResidpanel)
 
 script_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 
+# relative path to the data file
+file_path <- file.path(script_dir, "raw_data.xlsx")
+
+# read .xlsx file in the project folder
+raw_data <- read_excel(file_path)
+
+# converting relevant columns to factors
+rds_data <- raw_data %>%
+  mutate(across(c(stage, file_type, ID, sex, element, el_type, el_no, date, file_number, linear, 
+                  curve, shape, call_ref), as.factor))
+
 # relative path to the data file + import into RStudio
 
-file_path <- file.path(script_dir, "rds_data.rds")
-bandpassed <- as.data.frame(readRDS(file_path))
+rds_file_path <- file.path(script_dir, "rds_data.rds")
+saveRDS(rds_data, rds_file_path)
+bandpassed <- readRDS(rds_file_path)
 
 # first filtering out all of Olympia's data from the table
 # dropping unused levels, and in this case the "Olympia" level from "ID" factor 
@@ -34,12 +46,13 @@ bandpassed <- bandpassed %>% droplevels(bandpassed$ID)
 
 # splitting the data set into train and test sets according to the ID variable
 
-set.seed(1)
 # configuring how the sample data will be split for the training and testing sets
 
 sb <- sample.split(bandpassed$ID, SplitRatio = 0.7) 
 train = bandpassed[sb, ]
 test = bandpassed[!sb, ]
+train$ID <- as.factor(train$ID)
+test$ID <- as.factor(test$ID)
 
 set.seed(70)
 
@@ -48,17 +61,28 @@ set.seed(70)
 
 mtryGrid <- expand.grid(mtry = c(1:15))
 model_mtry <- train(ID ~ sex + avg_entropy + bw_90 + dur_90 + freq_5 + 
-                      freq_95 + freq_center + time_center + shape, data=train, 
+                      freq_95 + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                      `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                      `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                      `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                      `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                      `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                      `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                      `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                      `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                      `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                      `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                      `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                      `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                      `131` + `132` + `133`, data=train, 
                     method="rf", tuneGrid = mtryGrid, ntree = 500)
 
 bestmtry <- model_mtry$bestTune$mtry # storing the best mtry value in a variable
 
-set.seed(70)
-rf_model <- randomForest(train[,c(9,13:19,22)], train$ID, method="rf", 
+rf_model <- randomForest(train[,c(9,13:19,22:155)], train$ID, method="rf", 
                          mtry = bestmtry, ntree=500, importance = TRUE)
 print(rf_model) # to see the OOB error rate 
 
-set.seed(70)
 pred_train <- predict(rf_model, test)
 confusionMatrix(pred_train, test$ID)
 
@@ -74,23 +98,38 @@ train_B = tidy_Bs[sb_B, ]
 test_B = tidy_Bs[!sb_B, ]
 test_B <- test_B %>% filter(!grepl("-1:0",shape))
 # removing level as only 1 value present
+train_B$ID <- as.factor(train_B$ID)
+test_B$ID <- as.factor(test_B$ID)
+train_B$el_no <- as.factor(train_B$el_no)
+test_B$el_no <- as.factor(test_B$el_no)
 
-set.seed(2)
 model_mtry_B <- train(el_no ~ ID + sex + avg_entropy + bw_90 + dur_90 + freq_5 + 
-                        freq_95 + freq_center + time_center + shape, data=train_B, 
+                        freq_95 + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                        `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                        `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                        `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                        `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                        `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                        `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                        `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                        `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                        `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                        `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                        `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                        `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                        `131` + `132` + `133`, data=train_B, 
                       method="rf", tuneGrid = mtryGrid, ntree = 500)
 
 bestmtry_B <- model_mtry_B$bestTune$mtry
 
 set.seed(2)
-rf_model_B <- randomForest(train_B[,c(8,9, 13:19,22)],train_B$el_no,method="rf", 
+rf_model_B <- randomForest(train_B[,c(8,9, 13:19,22:155)],train_B$el_no,method="rf", 
                            mtry = bestmtry_B, ntree=500, importance = TRUE)
 print(rf_model_B)
  
 test_B <- rbind(train_B[1,], test_B)
 test_B <- test_B[-1,]
 
-set.seed(2)
 pred_train_B <- predict(rf_model_B, test_B)
 confusionMatrix(pred_train_B, test_B$el_no)
 
@@ -103,20 +142,33 @@ set.seed(3)
 sb_C <- sample.split(tidy_Cs$el_no, SplitRatio = 0.7)
 train_C = tidy_Cs[sb_C, ]
 test_C = tidy_Cs[!sb_C, ]
+train_C$el_no <- as.factor(train_C$el_no)
+test_C$el_no <- as.factor(test_C$el_no)
 
-set.seed(3)
 model_mtry_C <- train(el_no ~ ID + sex + avg_entropy + bw_90 + dur_90 + freq_5 + 
-                        freq_95 + freq_center + time_center + shape, 
+                        freq_95 + freq_center + time_center + shape + 
+                        `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                        `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                        `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                        `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                        `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                        `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                        `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                        `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                        `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                        `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                        `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                        `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                        `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                        `131` + `132` + `133`, 
                       data=train_C, method="rf", tuneGrid=mtryGrid, ntree = 500)
 
 bestmtry_C <- model_mtry_C$bestTune$mtry
 
-set.seed(3)
-rf_model_C <- randomForest(train_C[,c(8,9,13:19,22)], train_C$el_no, method="rf", 
+rf_model_C <- randomForest(train_C[,c(8,9,13:19,22:155)], train_C$el_no, method="rf", 
                            mtry = bestmtry_C, ntree=500, importance = TRUE)
 print(rf_model_C)
 
-set.seed(3)
 pred_train_C <- predict(rf_model_C, test_C)
 confusionMatrix(pred_train_C, test_C$el_no)
 
@@ -131,20 +183,33 @@ set.seed(5)
 sb_1 <- sample.split(tidy_1$el_type, SplitRatio = 0.7) 
 train_1 = tidy_1[sb_1, ]
 test_1 = tidy_1[!sb_1, ]
+train_1$el_type <- as.factor(train_1$el_type)
+test_1$el_type <- as.factor(test_1$el_type)
 
-set.seed(5)
 model_mtry_1 <- train(el_type ~ ID + sex + avg_entropy + bw_90 + dur_90 + freq_5+ 
-                        freq_95 + freq_center + time_center + shape, 
+                        freq_95 + freq_center + time_center + shape + 
+                        `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                        `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                        `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                        `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                        `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                        `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                        `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                        `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                        `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                        `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                        `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                        `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                        `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                        `131` + `132` + `133`, 
                       data=train_1, method="rf", tuneGrid=mtryGrid, ntree = 500)
 
 bestmtry_1 <- model_mtry_1$bestTune$mtry
 
-set.seed(5)
-rf_model_1 <- randomForest(train_1[,c(8,9,13:19,22)],train_1$el_type,method="rf", 
+rf_model_1 <- randomForest(train_1[,c(8,9,13:19,22:155)],train_1$el_type,method="rf", 
                            mtry = bestmtry_1, ntree=500, importance = TRUE)
 print(rf_model_1)
 
-set.seed(5)
 pred_train_1 <- predict(rf_model_1, test_1)
 confusionMatrix(pred_train_1, test_1$el_type)
 
@@ -159,20 +224,33 @@ set.seed(6)
 sb_2 <- sample.split(tidy_2$el_type, SplitRatio = 0.7) 
 train_2 = tidy_2[sb_2, ]
 test_2 = tidy_2[!sb_2, ]
+train_2$el_type <- as.factor(train_2$el_type)
+test_2$el_type <- as.factor(test_2$el_type)
 
-set.seed(6)
 model_mtry_2 <- train(el_type ~ ID + sex + avg_entropy + bw_90 + dur_90 + freq_5+ 
-                        freq_95 + freq_center + time_center + shape, data=train_2, 
+                        freq_95 + freq_center + time_center + shape + 
+                        `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                        `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                        `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                        `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                        `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                        `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                        `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                        `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                        `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                        `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                        `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                        `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                        `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                        `131` + `132` + `133`, data=train_2, 
                       method="rf", tuneGrid=mtryGrid, ntree = 500)
 
 bestmtry_2 <- model_mtry_2$bestTune$mtry
 
-set.seed(6)
-rf_model_2 <- randomForest(train_2[,c(8,9,13:19,22)],train_2$el_type,method="rf", 
+rf_model_2 <- randomForest(train_2[,c(8,9,13:19,22:155)],train_2$el_type,method="rf", 
                            mtry = bestmtry_2, ntree=500, importance = TRUE)
 print(rf_model_2)
 
-set.seed(6)
 pred_train_2 <- predict(rf_model_2, test_2)
 confusionMatrix(pred_train_2, test_2$el_type)
 
@@ -188,20 +266,33 @@ set.seed(18)
 sb_A <- sample.split(tidy_As$ID, SplitRatio = 0.7)
 train_A = tidy_As[sb_A, ]
 test_A = tidy_As[!sb_A, ]
+train_A$ID <- as.factor(train_A$ID)
+test_A$ID <- as.factor(test_A$ID)
 
-set.seed(18)
 model_mtry_A <- train(ID ~ sex + avg_entropy + bw_90 + dur_90 + freq_5 + freq_95
-                      + freq_center + time_center + shape, data=train_A, 
+                      + freq_center + time_center + shape + 
+                        `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                        `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                        `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                        `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                        `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                        `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                        `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                        `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                        `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                        `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                        `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                        `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                        `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                        `131` + `132` + `133`, data=train_A, 
                       method="rf", tuneGrid=mtryGrid, ntree=500)
 
 bestmtry_A <- model_mtry_A$bestTune$mtry
 
-set.seed(18)
-rf_model_A <- randomForest(train_A[,c(9,13:19,22)],train_A$ID,method="rf", 
+rf_model_A <- randomForest(train_A[,c(9,13:19,22:155)],train_A$ID,method="rf", 
                            mtry = bestmtry_A, ntree=500, importance = TRUE)
 print(rf_model_A)
 
-set.seed(18)
 pred_train_A <- predict(rf_model_A, test_A)
 confusionMatrix(pred_train_A, test_A$ID)
 
@@ -216,20 +307,32 @@ set.seed(7)
 sb_B_1 <- sample.split(tidy_B_1$ID, SplitRatio = 0.7) 
 train_B_1 = tidy_B_1[sb_B_1, ]
 test_B_1 = tidy_B_1[!sb_B_1, ]
+train_B_1$ID <- as.factor(train_B_1$ID)
+test_B_1$ID <- as.factor(test_B_1$ID)
 
-set.seed(7)
 model_mtry_B_1 <- train(ID ~ sex + avg_entropy + bw_90 + dur_90 + freq_5+freq_95
-                        + freq_center + time_center + shape, data=train_B_1, 
+                        + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                          `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                          `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                          `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                          `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                          `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                          `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                          `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                          `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                          `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                          `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                          `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                          `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                          `131`+ `132` + `133`, data=train_B_1, 
                         method="rf", tuneGrid=mtryGrid, ntree=500)
 
 bestmtry_B_1 <- model_mtry_B_1$bestTune$mtry
 
-set.seed(7)
-rf_model_B_1 <- randomForest(train_B_1[,c(9,13:19,22)],train_B_1$ID,method="rf", 
+rf_model_B_1 <- randomForest(train_B_1[,c(9,13:19,22:155)],train_B_1$ID,method="rf", 
                              mtry = bestmtry_B_1, ntree=500, importance = TRUE)
 print(rf_model_B_1)
 
-set.seed(7)
 pred_train_B_1 <- predict(rf_model_B_1, test_B_1)
 confusionMatrix(pred_train_B_1, test_B_1$ID)
 
@@ -244,20 +347,32 @@ set.seed(8)
 sb_B_2 <- sample.split(tidy_B_2$ID, SplitRatio = 0.7) 
 train_B_2 = tidy_B_2[sb_B_2, ]
 test_B_2 = tidy_B_2[!sb_B_2, ]
+train_B_2$ID <- as.factor(train_B_2$ID)
+test_B_2$ID <- as.factor(test_B_2$ID)
 
-set.seed(8)
 model_mtry_B_2 <- train(ID ~ sex + avg_entropy + bw_90 + dur_90 + freq_5+freq_95
-                        + freq_center + time_center + shape, data=train_B_2, 
+                        + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                          `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                          `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                          `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                          `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                          `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                          `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                          `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                          `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                          `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                          `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                          `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                          `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                          `131`+ `132` + `133`, data=train_B_2, 
                         method="rf", tuneGrid=mtryGrid, ntree=500)
 
 bestmtry_B_2 <- model_mtry_B_2$bestTune$mtry
 
-set.seed(8)
-rf_model_B_2 <- randomForest(train_B_2[,c(9,13:19,22)],train_B_2$ID,method="rf", 
+rf_model_B_2 <- randomForest(train_B_2[,c(9,13:19,22:155)],train_B_2$ID,method="rf", 
                              mtry = bestmtry_B_2, ntree=500, importance = TRUE)
 print(rf_model_B_2)
 
-set.seed(8)
 pred_train_B_2 <- predict(rf_model_B_2, test_B_2)
 confusionMatrix(pred_train_B_2, test_B_2$ID)
 
@@ -272,21 +387,33 @@ set.seed(9)
 sb_C_1 <- sample.split(tidy_C_1$ID, SplitRatio = 0.7) 
 train_C_1 = tidy_C_1[sb_C_1, ]
 test_C_1 = tidy_C_1[!sb_C_1, ]
+train_C_1$ID <- as.factor(train_C_1$ID)
+test_C_1$ID <- as.factor(test_C_1$ID)
 
-set.seed(9)
 model_mtry_C_1 <- train(ID ~ sex + avg_entropy + bw_90 + dur_90 + freq_5+freq_95
-                        + freq_center + time_center + shape, data=train_C_1, 
+                        + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                          `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                          `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                          `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                          `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                          `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                          `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                          `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                          `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                          `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                          `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                          `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                          `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                          `131`+ `132` + `133`, data=train_C_1, 
                         method="rf", tuneGrid=mtryGrid, ntree=500)
 
 bestmtry_C_1 <- model_mtry_C_1$bestTune$mtry
 
-set.seed(9)
-rf_model_C_1 <- randomForest(train_C_1[,c(9,13:19,22)],train_C_1$ID,method="rf", 
+rf_model_C_1 <- randomForest(train_C_1[,c(9,13:19,22:155)],train_C_1$ID,method="rf", 
                              mtry = bestmtry_C_1, ntree=500, importance = TRUE)
 
 print(rf_model_C_1)
 
-set.seed(9)
 pred_train_C_1 <- predict(rf_model_C_1, test_C_1)
 confusionMatrix(pred_train_C_1, test_C_1$ID)
 
@@ -299,26 +426,41 @@ tidy_C_2 <- tidy_Cs %>% filter(el_no == "2") #creating data set with only 2s
 tidy_C_2$element <- droplevels(tidy_C_2$element)
 tidy_C_2$el_type <- droplevels(tidy_C_2$el_type)
 tidy_C_2$el_no <- droplevels(tidy_C_2$el_no)
+tidy_C_2$element <- droplevels(tidy_C_2$element)
+tidy_C_2$el_type <- droplevels(tidy_C_2$el_type)
+tidy_C_2$el_no <- droplevels(tidy_C_2$el_no)
 
 set.seed(10)
 sb_C_2 <- sample.split(tidy_C_2$ID, SplitRatio = 0.7) 
 train_C_2 = tidy_C_2[sb_C_2, ]
 test_C_2 = tidy_C_2[!sb_C_2, ]
+train_C_2$ID <- as.factor(train_C_2$ID)
+test_C_2$ID <- as.factor(test_C_2$ID)
 
-set.seed(10)
 model_mtry_C_2 <- train(ID ~ sex + avg_entropy + bw_90 + dur_90 + freq_5+freq_95
-                        + freq_center + time_center + shape, data=train_C_2, 
+                        + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                          `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                          `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                          `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                          `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                          `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                          `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                          `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                          `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                          `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                          `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                          `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                          `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                          `131`+ `132` + `133`, data=train_C_2, 
                         method="rf", tuneGrid=mtryGrid, ntree=500)
 
 bestmtry_C_2 <- model_mtry_C_2$bestTune$mtry
 
-set.seed(10)
-rf_model_C_2 <- randomForest(train_C_2[,c(9,13:19,22)],train_C_2$ID,method="rf", 
+rf_model_C_2 <- randomForest(train_C_2[,c(9,13:19,22:155)],train_C_2$ID,method="rf", 
                              mtry = bestmtry_C_2, ntree=500, importance = TRUE)
 
 print(rf_model_C_2)
 
-set.seed(10)
 pred_train_C_2 <- predict(rf_model_C_2, test_C_2)
 confusionMatrix(pred_train_C_2, test_C_2$ID)
 
@@ -334,16 +476,29 @@ set.seed(11)
 sb_C_3 <- sample.split(tidy_C_3$ID, SplitRatio = 0.7) 
 train_C_3 = tidy_C_3[sb_C_3, ]
 test_C_3 = tidy_C_3[!sb_C_3, ]
+train_C_3$ID <- as.factor(train_C_3$ID)
+test_C_3$ID <- as.factor(test_C_3$ID)
 
-set.seed(11)
 model_mtry_C_3 <- train(ID ~ sex + avg_entropy + bw_90 + dur_90 + freq_5+freq_95
-                        + freq_center + time_center + shape, data=train_C_3, 
+                        + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                          `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                          `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                          `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                          `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                          `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                          `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                          `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                          `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                          `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                          `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                          `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                          `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                          `131`+ `132` + `133`, data=train_C_3, 
                         method="rf", tuneGrid=mtryGrid, ntree=500)
 
 bestmtry_C_3 <- model_mtry_C_3$bestTune$mtry
 
-set.seed(11)
-rf_model_C_3 <- randomForest(train_C_3[,c(9,13:19,22)],train_C_3$ID,method="rf", 
+rf_model_C_3 <- randomForest(train_C_3[,c(9,13:19,22:155)],train_C_3$ID,method="rf", 
                              mtry=bestmtry_C_3, ntree=500, importance = TRUE)
 
 print(rf_model_C_3)
@@ -364,24 +519,35 @@ View(tidy_s_by_ID)
 set.seed(12)
 tidy_s <- bandpassed %>% group_by(ID) %>% slice_sample(n=446)
 
-set.seed(12)
 sb_s <- sample.split(tidy_s$sex, SplitRatio = 0.7)
 train_s = tidy_s[sb_s, ]
 test_s = tidy_s[!sb_s, ]
+train_s$sex <- as.factor(train_s$sex)
+test_s$sex <- as.factor(test_s$sex)
 
-set.seed(12)
 model_mtry_s <- train(sex ~ avg_entropy + bw_90 + dur_90 + freq_5 + freq_95 + 
-                        freq_center + time_center + shape, data=train_s, 
+                        freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                        `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                        `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                        `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                        `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                        `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                        `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                        `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                        `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                        `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                        `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                        `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                        `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                        `131`+ `132` + `133`, data=train_s, 
                       method="rf", tuneGrid = mtryGrid, ntree = 500)
 
 bestmtry_s <- model_mtry_s$bestTune$mtry
 
-set.seed(12)
-rf_model_s <- randomForest(train_s[,c(13:19,22)], train_s$sex, method="rf", 
+rf_model_s <- randomForest(train_s[,c(13:19,22:155)], train_s$sex, method="rf", 
                            mtry=bestmtry_s, ntree=500, importance = TRUE)
 print(rf_model_s)
 
-set.seed(12)
 pred_train_s <- predict(rf_model_s, test_s)
 confusionMatrix(pred_train_s, test_s$sex)
 
@@ -394,24 +560,35 @@ View(tidy_A_by_ID)
 set.seed(19)
 tidy_s_A <- tidy_As %>% group_by(ID) %>% slice_sample(n=14)
 
-set.seed(19)
 sb_s_A <- sample.split(tidy_s_A$sex, SplitRatio = 0.7)
 train_s_A = tidy_s_A[sb_s_A, ]
 test_s_A = tidy_s_A[!sb_s_A, ]
+train_s_A$sex <- as.factor(train_s_A$sex)
+test_s_A$sex <- as.factor(test_s_A$sex)
 
-set.seed(19)
 model_mtry_s_A <- train(sex ~ avg_entropy + bw_90 + dur_90 + freq_5 + freq_95
-                        + freq_center + time_center + shape, data=train_s_A, 
+                        + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                          `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                          `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                          `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                          `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                          `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                          `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                          `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                          `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                          `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                          `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                          `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                          `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                          `131`+ `132` + `133`, data=train_s_A, 
                         method="rf", tuneGrid=mtryGrid, ntree=500)
 
 bestmtry_s_A <- model_mtry_s_A$bestTune$mtry
 
-set.seed(19)
-rf_model_s_A <- randomForest(train_s_A[,c(13:19,22)],train_s_A$sex,
+rf_model_s_A <- randomForest(train_s_A[,c(13:19,22:155)],train_s_A$sex,
                              method="rf", mtry=bestmtry_s_A, ntree=500, importance = TRUE)
 print(rf_model_s_A)
 
-set.seed(19)
 pred_train_s_A <- predict(rf_model_s_A, test_s_A)
 confusionMatrix(pred_train_s_A, test_s_A$sex)
 
@@ -424,24 +601,35 @@ View(tidy_B_1_by_ID)
 set.seed(13)
 tidy_s_B_1 <- tidy_B_1 %>% group_by(ID) %>% slice_sample(n=63)
 
-set.seed(13)
 sb_s_B_1 <- sample.split(tidy_s_B_1$sex, SplitRatio = 0.7)
 train_s_B_1 = tidy_s_B_1[sb_s_B_1, ]
 test_s_B_1 = tidy_s_B_1[!sb_s_B_1, ]
+train_s_B_1$sex <- as.factor(train_s_B_1$sex)
+test_s_B_1$sex <- as.factor(test_s_B_1$sex)
 
-set.seed(13)
 model_mtry_s_B_1 <- train(sex ~ avg_entropy + bw_90 + dur_90 + freq_5 + freq_95
-                          + freq_center + time_center + shape, data=train_s_B_1, 
+                          + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                            `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                            `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                            `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                            `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                            `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                            `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                            `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                            `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                            `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                            `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                            `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                            `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                            `131`+ `132` + `133`, data=train_s_B_1, 
                           method="rf", tuneGrid=mtryGrid, ntree=500)
 
 bestmtry_s_B_1 <- model_mtry_s_B_1$bestTune$mtry
 
-set.seed(13)
-rf_model_s_B_1<-randomForest(train_s_B_1[,c(13:19,22)],train_s_B_1$sex,
+rf_model_s_B_1<-randomForest(train_s_B_1[,c(13:19,22:155)],train_s_B_1$sex,
                              method="rf", mtry=bestmtry_s_B_1, ntree=500, importance = TRUE)
 print(rf_model_s_B_1)
 
-set.seed(13)
 pred_train_s_B_1 <- predict(rf_model_s_B_1, test_s_B_1)
 confusionMatrix(pred_train_s_B_1, test_s_B_1$sex)
 
@@ -454,24 +642,35 @@ View(tidy_B_2_by_ID)
 set.seed(14)
 tidy_s_B_2 <- tidy_B_2 %>% group_by(ID) %>% slice_sample(n=63)
 
-set.seed(14)
 sb_s_B_2 <- sample.split(tidy_s_B_2$sex, SplitRatio = 0.7)
 train_s_B_2 = tidy_s_B_2[sb_s_B_2, ]
 test_s_B_2 = tidy_s_B_2[!sb_s_B_2, ]
+train_s_B_2$sex <- as.factor(train_s_B_2$sex)
+test_s_B_2$sex <- as.factor(test_s_B_2$sex)
 
-set.seed(14)
 model_mtry_s_B_2 <- train(sex ~ avg_entropy + bw_90 + dur_90 + freq_5 + freq_95
-                          + freq_center + time_center + shape, data=train_s_B_2, 
+                          + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                            `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                            `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                            `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                            `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                            `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                            `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                            `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                            `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                            `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                            `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                            `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                            `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                            `131`+ `132` + `133`, data=train_s_B_2, 
                           method="rf", tuneGrid=mtryGrid, ntree=500)
 
 bestmtry_s_B_2 <- model_mtry_s_B_2$bestTune$mtry
 
-set.seed(14)
-rf_model_s_B_2<-randomForest(train_s_B_2[,c(13:19,22)],train_s_B_2$sex,method="rf", 
+rf_model_s_B_2<-randomForest(train_s_B_2[,c(13:19,22:155)],train_s_B_2$sex,method="rf", 
                              mtry=bestmtry_s_B_2, ntree=500, importance = TRUE)
 print(rf_model_s_B_2)
 
-set.seed(14)
 pred_train_s_B_2 <- predict(rf_model_s_B_2, test_s_B_2)
 confusionMatrix(pred_train_s_B_2, test_s_B_2$sex)
 
@@ -484,24 +683,35 @@ View(tidy_C_1_by_ID)
 set.seed(15)
 tidy_s_C_1 <- tidy_C_1 %>% group_by(ID) %>% slice_sample(n=33)
 
-set.seed(15)
 sb_s_C_1 <- sample.split(tidy_s_C_1$sex, SplitRatio = 0.7)
 train_s_C_1 = tidy_s_C_1[sb_s_C_1, ]
 test_s_C_1 = tidy_s_C_1[!sb_s_C_1, ]
+train_s_C_1$sex <- as.factor(train_s_C_1$sex)
+test_s_C_1$sex <- as.factor(test_s_C_1$sex)
 
-set.seed(15)
 model_mtry_s_C_1 <- train(sex ~ avg_entropy + bw_90 + dur_90 + freq_5 + freq_95
-                          + freq_center + time_center + shape, data=train_s_C_1, 
+                          + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                            `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                            `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                            `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                            `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                            `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                            `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                            `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                            `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                            `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                            `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                            `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                            `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                            `131`+ `132` + `133`, data=train_s_C_1, 
                           method="rf", tuneGrid=mtryGrid, ntree=500)
 
 bestmtry_s_C_1 <- model_mtry_s_C_1$bestTune$mtry
 
-set.seed(15)
-rf_model_s_C_1<-randomForest(train_s_C_1[,c(13:19,22)],train_s_C_1$sex,method="rf", 
+rf_model_s_C_1<-randomForest(train_s_C_1[,c(13:19,22:155)],train_s_C_1$sex,method="rf", 
                              mtry=bestmtry_s_C_1, ntree=500, importance = TRUE)
 print(rf_model_s_C_1)
 
-set.seed(15)
 pred_train_s_C_1 <- predict(rf_model_s_C_1, test_s_C_1)
 confusionMatrix(pred_train_s_C_1, test_s_C_1$sex)
 
@@ -514,24 +724,35 @@ View(tidy_C_2_by_ID)
 set.seed(16)
 tidy_s_C_2 <- tidy_C_2 %>% group_by(ID) %>% slice_sample(n=36)
 
-set.seed(16)
 sb_s_C_2 <- sample.split(tidy_s_C_2$sex, SplitRatio = 0.7)
 train_s_C_2 = tidy_s_C_2[sb_s_C_2, ]
 test_s_C_2 = tidy_s_C_2[!sb_s_C_2, ]
+train_s_C_2$sex <- as.factor(train_s_C_2$sex)
+test_s_C_2$sex <- as.factor(test_s_C_2$sex)
 
-set.seed(16)
 model_mtry_s_C_2 <- train(sex ~ avg_entropy + bw_90 + dur_90 + freq_5 + freq_95
-                          + freq_center + time_center + shape, data=train_s_C_2, 
+                          + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                            `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                            `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                            `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                            `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                            `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                            `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                            `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                            `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                            `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                            `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                            `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                            `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                            `131`+ `132` + `133`, data=train_s_C_2, 
                           method="rf", tuneGrid=mtryGrid, ntree=500)
 
 bestmtry_s_C_2 <- model_mtry_s_C_2$bestTune$mtry
 
-set.seed(16)
-rf_model_s_C_2<-randomForest(train_s_C_2[,c(13:19,22)],train_s_C_2$sex,method="rf", 
+rf_model_s_C_2<-randomForest(train_s_C_2[,c(13:19,22:155)],train_s_C_2$sex,method="rf", 
                              mtry=bestmtry_s_C_2, ntree=500, importance = TRUE)
 print(rf_model_s_C_2)
 
-set.seed(16)
 pred_train_s_C_2 <- predict(rf_model_s_C_2, test_s_C_2)
 confusionMatrix(pred_train_s_C_2, test_s_C_2$sex) 
 
@@ -544,24 +765,35 @@ View(tidy_C_3_by_ID)
 set.seed(17)
 tidy_s_C_3 <- tidy_C_3 %>% group_by(ID) %>% slice_sample(n=36)
 
-set.seed(17)
 sb_s_C_3 <- sample.split(tidy_s_C_3$sex, SplitRatio = 0.7)
 train_s_C_3 = tidy_s_C_3[sb_s_C_3, ]
 test_s_C_3 = tidy_s_C_3[!sb_s_C_3, ]
+train_s_C_3$sex <- as.factor(train_s_C_3$sex)
+test_s_C_3$sex <- as.factor(test_s_C_3$sex)
 
-set.seed(17)
 model_mtry_s_C_3 <- train(sex ~ avg_entropy + bw_90 + dur_90 + freq_5 + freq_95
-                          + freq_center + time_center + shape, data=train_s_C_3, 
+                          + freq_center + time_center + shape + `1` + `2` + `3` + `4` + `5` + `6` + `7` + `8` + `9` + `10` + 
+                            `11` + `12` + `13` + `14` + `15` + `16` + `17` + `18` + `19` + `20` + 
+                            `21` + `22` + `23` + `24` + `25` + `26` + `27` + `28` + `29` + `30` + 
+                            `31` + `32` + `33` + `34` + `35` + `36` + `37` + `38` + `39` + `40` + 
+                            `41` + `42` + `43` + `44` + `45` + `46` + `47` + `48` + `49` + `50` + 
+                            `51` + `52` + `53` + `54` + `55` + `56` + `57` + `58` + `59` + `60` + 
+                            `61` + `62` + `63` + `64` + `65` + `66` + `67` + `68` + `69` + `70` + 
+                            `71` + `72` + `73` + `74` + `75` + `76` + `77` + `78` + `79` + `80` + 
+                            `81` + `82` + `83` + `84` + `85` + `86` + `87` + `88` + `89` + `90` + 
+                            `91` + `92` + `93` + `94` + `95` + `96` + `97` + `98` + `99` + `100` + 
+                            `101` + `102` + `103` + `104` + `105` + `106` + `107` + `108` + `109` + `110` + 
+                            `111` + `112` + `113` + `114` + `115` + `116` + `117` + `118` + `119` + `120` + 
+                            `121` + `122` + `123` + `124` + `125` + `126` + `127` + `128` + `129` + `130` + 
+                            `131`+ `132` + `133`, data=train_s_C_3, 
                           method="rf", tuneGrid=mtryGrid, ntree=500)
 
 bestmtry_s_C_3 <- model_mtry_s_C_3$bestTune$mtry
 
-set.seed(17)
-rf_model_s_C_3<-randomForest(train_s_C_3[,c(13:19,22)],train_s_C_3$sex,method="rf", 
+rf_model_s_C_3<-randomForest(train_s_C_3[,c(13:19,22:155)],train_s_C_3$sex,method="rf", 
                              mtry=bestmtry_s_C_3, ntree=500, importance = TRUE)
 print(rf_model_s_C_3)
 
-set.seed(17)
 pred_train_s_C_3 <- predict(rf_model_s_C_3, test_s_C_3)
 confusionMatrix(pred_train_s_C_3, test_s_C_3$sex)
 
